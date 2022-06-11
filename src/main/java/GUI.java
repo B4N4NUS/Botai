@@ -6,55 +6,62 @@ import org.apache.poi.ss.usermodel.Row;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Random;
 
 public class GUI extends JFrame {
-    ArrayList<String> questions;
-    ArrayList<String> answers;
-    JTextArea text;
+    ArrayList<String> questions = new ArrayList<>();
+    ArrayList<String> answers = new ArrayList<>();
     TextButton current, next;
     boolean showAns = false;
     int currentInd = 0;
 
     public static void main(String[] args) {
         FlatDarculaLaf.setup();
-        ArrayList<String> questions = new ArrayList<>();
-        ArrayList<String> answers = new ArrayList<>();
-
-        try {
-            FileInputStream fis = new FileInputStream(new File("src/main/resources/data.xls"));
-            HSSFWorkbook wb = new HSSFWorkbook(fis);
-            HSSFSheet sheet = wb.getSheetAt(0);
-            FormulaEvaluator formulaEvaluator = wb.getCreationHelper().createFormulaEvaluator();
-            for (Row row : sheet) {
-                try {
-                    questions.add(row.getCell(0).getStringCellValue());
-                    answers.add(row.getCell(1).getStringCellValue());
-                } catch (Exception ex) {
-                    break;
-                }
-            }
-
-            GUI gui = new GUI(questions, answers);
-
-            fis.close();
-            formulaEvaluator.clearAllCachedResultValues();
-            wb.close();
-        } catch (Exception exception) {
-            System.out.println("Cant get data from xls");
-        }
+        GUI gui = new GUI();
     }
 
-    public GUI(ArrayList<String> questions, ArrayList<String> answers) {
-        this.answers = answers;
-        this.questions = questions;
+    public GUI() {
+        try {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setDialogTitle("Pick xls file");
+            int result = chooser.showOpenDialog(this);
 
-        build();
-        setVisible(true);
-        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+            if (result == JFileChooser.APPROVE_OPTION ) {
+                FileInputStream fis = new FileInputStream(chooser.getSelectedFile());
+                HSSFWorkbook wb = new HSSFWorkbook(fis);
+                HSSFSheet sheet = wb.getSheetAt(0);
+                FormulaEvaluator formulaEvaluator = wb.getCreationHelper().createFormulaEvaluator();
+                for (Row row : sheet) {
+                    try {
+                        questions.add(row.getCell(0).getStringCellValue());
+                        answers.add(row.getCell(1).getStringCellValue());
+                    } catch (Exception ex) {
+                        break;
+                    }
+                }
+
+                fis.close();
+                formulaEvaluator.clearAllCachedResultValues();
+                wb.close();
+            } else {
+                throw new Exception("Cant get file");
+            }
+
+            build();
+            setVisible(true);
+            setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            JOptionPane.showMessageDialog(this, exception.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            // System.out.println("Cant get data from xls");
+            dispose();
+            System.exit(0);
+        }
+
+
+
     }
 
     private void build() {
